@@ -1,4 +1,4 @@
-# casa-do-leao-api
+# Casa do Leão API
 API: Responsável por fornecer dados e serviços para o aplicativo e backoffice.
 
 # Comando para criar os Migrations Iniciais
