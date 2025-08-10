@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35506.116 d17.12
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CDL.Api", "CDL.Api.csproj", "{4E9F2F0F-731C-440B-951F-68B0FC5C89DF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{D4EF93E4-327C-4043-9BE4-C8043F975B75}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CDL.Models", "..\CDL.Models\CDL.Models.csproj", "{E703A708-78FA-4736-BFEC-0B5DC5845A49}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4E9F2F0F-731C-440B-951F-68B0FC5C89DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4E9F2F0F-731C-440B-951F-68B0FC5C89DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4E9F2F0F-731C-440B-951F-68B0FC5C89DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4E9F2F0F-731C-440B-951F-68B0FC5C89DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E703A708-78FA-4736-BFEC-0B5DC5845A49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E703A708-78FA-4736-BFEC-0B5DC5845A49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E703A708-78FA-4736-BFEC-0B5DC5845A49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E703A708-78FA-4736-BFEC-0B5DC5845A49}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E703A708-78FA-4736-BFEC-0B5DC5845A49} = {D4EF93E4-327C-4043-9BE4-C8043F975B75}
+	EndGlobalSection
+EndGlobal
