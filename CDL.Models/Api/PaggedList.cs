@@ -27,5 +27,6 @@ namespace CDL.Models.Api
             this.TotalCount = totalCount;
             this.Items = items;
         }
+
     }
 }
