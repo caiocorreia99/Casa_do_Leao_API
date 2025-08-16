@@ -67,17 +67,17 @@ namespace CDL.Api.Controllers.v1.Services
                 .FirstOrDefaultAsync(u => u.IdUser == userRequest.IdUser);
 
             if (user == null)
-                throw new Exception("User not found");
+                throw new Exception("Usuario nao encontrado");
 
             if (userRequest.Email != null && !APIHelper.ValidMail(userRequest.Email))
-                throw new Exception("Invalid Email");
+                throw new Exception("Email com formato invalido");
 
             // verifica se email já está em uso por outro user
             if (!string.IsNullOrEmpty(userRequest.Email))
             {
                 var existing = await db.User.FirstOrDefaultAsync(u => u.Email == userRequest.Email && u.IdUser != userRequest.IdUser);
                 if (existing != null)
-                    throw new Exception("Email already in use");
+                    throw new Exception("Email ja esta sendo usado por ouro usuario, inseria um e-mail diferente.");
                 user.Email = userRequest.Email;
             }
 
@@ -132,19 +132,19 @@ namespace CDL.Api.Controllers.v1.Services
             using var db = databaseFactory.Create();
 
             if (userRequest == null)
-                throw new Exception("object not sent");
+                throw new Exception("Objeto vazio");
 
             if (userRequest.Name == null)
-                throw new Exception("Name not sent");
+                throw new Exception("O Nome nao foi inserido.");
 
             if (userRequest.Email == null)
-                throw new Exception("Email not sent");
+                throw new Exception("Email nao foi inserido");
 
             if (!APIHelper.ValidMail(userRequest.Email))
-                throw new Exception("Invalid Email");
+                throw new Exception("Email com formato invalido");
 
             var request = await db.User.FirstOrDefaultAsync(u => u.Email == userRequest.Email);
-            if (request != null) throw new Exception($"Email already in use");
+            if (request != null) throw new Exception($"Email ja esta sendo usado por ouro usuario, inseria um e-mail diferente.");
 
 
             string passEncrypted = APIHelper.EncryptAES(userRequest.Password, env.CypherPass);

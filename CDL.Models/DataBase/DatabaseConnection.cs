@@ -23,6 +23,8 @@ namespace CDL.Models.DataBase
 
         public virtual DbSet<User> User { get; set; }
         public virtual DbSet<UserFields> UserFields { get; set; }
+        public virtual DbSet<Event> Event { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -39,6 +41,11 @@ namespace CDL.Models.DataBase
             modelBuilder.Entity<UserFields>(entity =>
             {
                 entity.HasKey(f => f.IdUserFields);
+            });
+
+            modelBuilder.Entity<Event>(entity =>
+            {
+                entity.HasKey(f => f.IdEvent);
             });
 
             base.OnModelCreating(modelBuilder);
