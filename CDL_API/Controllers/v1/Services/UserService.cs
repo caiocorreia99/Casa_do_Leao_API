@@ -77,7 +77,7 @@ namespace CDL.Api.Controllers.v1.Services
             {
                 var existing = await db.User.FirstOrDefaultAsync(u => u.Email == userRequest.Email && u.IdUser != userRequest.IdUser);
                 if (existing != null)
-                    throw new Exception("Email ja esta sendo usado por ouro usuario, inseria um e-mail diferente.");
+                    throw new Exception("Email ja esta sendo usado por ouro usuário, inseria um e-mail diferente.");
                 user.Email = userRequest.Email;
             }
 
@@ -144,7 +144,7 @@ namespace CDL.Api.Controllers.v1.Services
                 throw new Exception("Email com formato invalido");
 
             var request = await db.User.FirstOrDefaultAsync(u => u.Email == userRequest.Email);
-            if (request != null) throw new Exception($"Email ja esta sendo usado por ouro usuario, inseria um e-mail diferente.");
+            if (request != null) throw new Exception($"Email ja esta sendo usado por ouro usuário, inseria um e-mail diferente.");
 
 
             string passEncrypted = APIHelper.EncryptAES(userRequest.Password, env.CypherPass);
@@ -156,8 +156,8 @@ namespace CDL.Api.Controllers.v1.Services
                 Password = passEncrypted,
                 Admin = userRequest.Admin,
                 Active = true,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
                 Fields = new UserFields
                 {
                     CPF = userRequest.CPF,
@@ -166,8 +166,8 @@ namespace CDL.Api.Controllers.v1.Services
                     Endereco = userRequest.Endereco,
                     CEP = userRequest.CEP,
                     Cidade = userRequest.Cidade,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
                 }
             };
 
@@ -176,13 +176,62 @@ namespace CDL.Api.Controllers.v1.Services
 
         }
 
-        public async Task DisableUser(UserRequest userRequest)
+        public async Task CreatePublicUser(UserRequest userRequest)
+        {
+            using var db = databaseFactory.Create();
+
+            if (userRequest == null)
+                throw new Exception("Objeto vazio");
+
+            if (userRequest.Name == null)
+                throw new Exception("O Nome nao foi inserido.");
+
+            if (userRequest.Email == null)
+                throw new Exception("Email nao foi inserido");
+
+            if (!APIHelper.ValidMail(userRequest.Email))
+                throw new Exception("Email com formato invalido");
+
+            var request = await db.User.FirstOrDefaultAsync(u => u.Email == userRequest.Email);
+            if (request != null) throw new Exception($"Email ja esta sendo usado por ouro usuário, inseria um e-mail diferente.");
+
+
+            string passEncrypted = APIHelper.EncryptAES(userRequest.Password, env.CypherPass);
+
+            var user = new User
+            {
+                Name = userRequest.Name,
+                Email = userRequest.Email,
+                Password = passEncrypted,
+                Admin = false,
+                Active = true,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
+                Fields = new UserFields
+                {
+                    CPF = userRequest.CPF,
+                    DataNascimento = userRequest.DataNascimento,
+                    Telefone = userRequest.Telefone,
+                    Endereco = userRequest.Endereco,
+                    CEP = userRequest.CEP,
+                    Cidade = userRequest.Cidade,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now
+                }
+            };
+
+            await db.User.AddAsync(user);
+            await db.SaveChangesAsync();
+
+        }
+
+        public async Task DisableUser(int idUser)
         {
 
             using var db = databaseFactory.Create();
 
-            var user = db.User.FirstOrDefault(s => s.IdUser == userRequest.IdUser) ??
-                throw new Exception("Cleinte não encontrado.");
+            var user = db.User.FirstOrDefault(s => s.IdUser == idUser) ??
+                throw new Exception("Usuário não encontrado.");
 
             user.Active = false;
 

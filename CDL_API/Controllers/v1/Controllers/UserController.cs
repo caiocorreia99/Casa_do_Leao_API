@@ -37,16 +37,15 @@ namespace CDL.Api.Controllers.v1.Controllers
 
             }
         }
-
-        [AllowAnonymous]
+        
         [HttpPost]
         [Route(Constants.UserRoute + "/create-user")]
-        public async Task<ApiResponse<Response>> Post([FromBody] UserRequest userRequest)
+        public async Task<ApiResponse<Response>> CreateUser([FromBody] UserRequest userRequest)
         {
             try
             {
                 await userService.CreateUser(userRequest);
-                return ApiResponse<Response>.GetSuccessResponse(message: $"Usuario criado com sucesso.");
+                return ApiResponse<Response>.GetSuccessResponse(message: $"Usuário criado com sucesso.");
             }
             catch (Exception ex)
             {
@@ -54,10 +53,26 @@ namespace CDL.Api.Controllers.v1.Controllers
             }
         }
 
+        [HttpPost]
         [AllowAnonymous]
+        [Route(Constants.UserRoute + "/create-public-user")]
+        public async Task<ApiResponse<Response>> CreatePublicUser([FromBody] UserRequest userRequest)
+        {
+            try
+            {
+                await userService.CreatePublicUser(userRequest);
+                return ApiResponse<Response>.GetSuccessResponse(message: $"Usuário criado com sucesso.");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<Response>.GetErrorResponse(InternalCode.Catch_Generic, System.Net.HttpStatusCode.InternalServerError, ex.Message, exception: ex); ;
+            }
+        }
+
+        [Authorize]
         [HttpPut]
         [Route(Constants.UserRoute + "/update-user")]
-        public async Task<ApiResponse<Response>> UptadeUser([FromBody] UserRequest userRequest)
+        public async Task<ApiResponse<Response>> UpdateUser([FromBody] UserRequest userRequest)
         {
             try
             {
@@ -70,6 +85,7 @@ namespace CDL.Api.Controllers.v1.Controllers
             }
         }
 
+        [Authorize]
         [HttpGet]
         [Route(Constants.UserRoute + "/list")]
         public async Task<ApiResponse<PaggedList<UserResponse>>> ListUsers([FromQuery] int page = 1, int pageSize = 0, string? search = null)
@@ -87,14 +103,15 @@ namespace CDL.Api.Controllers.v1.Controllers
             }
         }
 
-        [HttpPost]
+        [Authorize]
+        [HttpDelete]
         [Route(Constants.UserRoute + "/disable-user")]
-        public async Task<ApiResponse<Response>> DisableCustomer([FromQuery] UserRequest userRequest)
+        public async Task<ApiResponse<Response>> DisableUser([FromQuery] int idUser)
         {
             try
             {
-                await userService.DisableUser(userRequest);
-                return ApiResponse<Response>.GetSuccessResponse(message: $"Cliente Desativado com Sucesso.");
+                await userService.DisableUser(idUser);
+                return ApiResponse<Response>.GetSuccessResponse(message: $"Usuário desativado com Sucesso.");
             }
             catch (Exception ex)
             {

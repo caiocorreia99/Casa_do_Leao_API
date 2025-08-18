@@ -78,6 +78,7 @@ builder.Services.AddScoped<IDatabaseFactory<DatabaseConnection>, DatabaseFactory
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IEventService, EventService>();
 
 builder.Services.AddAuthentication(x =>
 {
@@ -112,6 +113,13 @@ builder.Services.AddAuthentication(x =>
 
         }
     };
+});
+
+builder.Services.AddAuthorization(options =>
+{    
+    options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
 });
 
 var app = builder.Build();

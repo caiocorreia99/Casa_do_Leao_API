@@ -49,16 +49,26 @@ namespace CDL.Api.Controllers.v1.Services
             return new PaggedList<EventResponse>(page, pageSize, pageRange, totalCount, response);
         }
 
-        public async Task<List<EventResponse>> PublicEvents()
+        public async Task<PaggedList<EventResponse>> PublicListEvents(int page, int pageSize, string? search = null)
         {
             using var db = databaseFactory.Create();
 
-            var result = await db.Event
-                .Where(e => e.Active && e.Published && e.StartDate >= DateTime.UtcNow.AddDays(-1))
-                .OrderBy(e => e.StartDate)
+            IQueryable<Event> query = db.Event.Where(e => e.Active);
+
+            if (!string.IsNullOrEmpty(search))
+                query = query.Where(e => e.Title.Contains(search));
+
+            var totalCount = await query.CountAsync();
+            if (pageSize == 0) pageSize = totalCount;
+            var pageRange = (int)Math.Ceiling(totalCount / (decimal)pageSize);
+
+            var result = await query
+                .OrderByDescending(e => e.StartDate)
+                .Skip(pageSize * (page - 1))
+                .Take(pageSize)
                 .ToListAsync();
 
-            return result.Select(e => new EventResponse
+            var response = result.Select(e => new EventResponse
             {
                 IdEvent = e.IdEvent,
                 Title = e.Title,
@@ -69,6 +79,8 @@ namespace CDL.Api.Controllers.v1.Services
                 ImageUrl = e.ImageUrl,
                 Published = e.Published
             }).ToList();
+
+            return new PaggedList<EventResponse>(page, pageSize, pageRange, totalCount, response);
         }
 
         public async Task<EventResponse> GetEvent(int idEvent)
