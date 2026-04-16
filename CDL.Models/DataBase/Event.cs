@@ -19,5 +19,7 @@ namespace CDL.Models.DataBase
         public bool Active { get; set; } = true;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
+
+        public ICollection<EventRegistration> Registrations { get; set; } = new List<EventRegistration>();
     }
 }

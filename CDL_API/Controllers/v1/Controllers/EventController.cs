@@ -1,15 +1,16 @@
 ﻿using CDL.Api.Controllers.v1.Interface;
-using CDL.Api.Helpers;
 using CDL.Models.Api;
 using CDL.Models.Binder;
+using CDL.Models.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static CDL.Models.Helpers.Constants;
+using ApiRoutes = CDL.Api.Helpers.Constants;
 
 namespace CDL.Api.Controllers.v1.Controllers
 {
     [ApiController]
-    [Route(Constants.EventRoute)]
+    [Route(ApiRoutes.EventRoute)]
     public class EventController : ControllerBase
     {
 
@@ -20,9 +21,9 @@ namespace CDL.Api.Controllers.v1.Controllers
             eventService = EventService;
         }
 
-        [Authorize]
+        [Authorize(Policy = AuthPolicies.EditorOrAdmin)]
         [HttpGet]
-        [Route(Constants.EventRoute + "/get-event")]
+        [Route(ApiRoutes.EventRoute + "/get-event")]
         public async Task<ApiResponse<EventResponse>> GetEvent([FromQuery] int idEvent)
         {
             try
@@ -37,9 +38,9 @@ namespace CDL.Api.Controllers.v1.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Policy = AuthPolicies.EditorOrAdmin)]
         [HttpPost]
-        [Route(Constants.EventRoute + "/create-event")]
+        [Route(ApiRoutes.EventRoute + "/create-event")]
         public async Task<ApiResponse<Response>> CreateEvent([FromBody] EventRequest eventRequest)
         {
             try
@@ -53,9 +54,9 @@ namespace CDL.Api.Controllers.v1.Controllers
             }
         }
         
-        [Authorize]
+        [Authorize(Policy = AuthPolicies.EditorOrAdmin)]
         [HttpPut]
-        [Route(Constants.EventRoute + "/update-event")]
+        [Route(ApiRoutes.EventRoute + "/update-event")]
         public async Task<ApiResponse<Response>> UpdateEvent([FromBody] EventRequest eventRequest)
         {
             try
@@ -69,9 +70,9 @@ namespace CDL.Api.Controllers.v1.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Policy = AuthPolicies.EditorOrAdmin)]
         [HttpGet]
-        [Route(Constants.EventRoute + "/list")]
+        [Route(ApiRoutes.EventRoute + "/list")]
         public async Task<ApiResponse<PaggedList<EventResponse>>> ListEvents([FromQuery] int page = 1, int pageSize = 0, string? search = null)
         {
             try
@@ -87,9 +88,9 @@ namespace CDL.Api.Controllers.v1.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Policy = AuthPolicies.EditorOrAdmin)]
         [HttpDelete]
-        [Route(Constants.EventRoute + "/disable-event")]
+        [Route(ApiRoutes.EventRoute + "/disable-event")]
         public async Task<ApiResponse<Response>> DisableEvent([FromQuery] EventRequest eventRequest)
         {
             try
@@ -107,7 +108,7 @@ namespace CDL.Api.Controllers.v1.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        [Route(Constants.EventRoute + "/public-list")]
+        [Route(ApiRoutes.EventRoute + "/public-list")]
         public async Task<ApiResponse<PaggedList<EventResponse>>> PublicListEvents([FromQuery] int page = 1, int pageSize = 0, string? search = null)
         {
             try

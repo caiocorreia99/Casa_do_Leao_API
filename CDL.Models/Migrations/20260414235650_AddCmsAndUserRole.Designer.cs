@@ -4,6 +4,7 @@ using CDL.Models.DataBase;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CDL.Models.Migrations
 {
     [DbContext(typeof(DatabaseConnection))]
-    partial class DatabaseConnectionModelSnapshot : ModelSnapshot
+    [Migration("20260414235650_AddCmsAndUserRole")]
+    partial class AddCmsAndUserRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -235,32 +238,6 @@ namespace CDL.Models.Migrations
                     b.ToTable("PostCarouselImage");
                 });
 
-            modelBuilder.Entity("CDL.Models.DataBase.Role", b =>
-                {
-                    b.Property<int>("IdRole")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("IdRole"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("varchar(32)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("varchar(64)");
-
-                    b.HasKey("IdRole");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("Role");
-                });
-
             modelBuilder.Entity("CDL.Models.DataBase.User", b =>
                 {
                     b.Property<int>("IdUser")
@@ -282,9 +259,6 @@ namespace CDL.Models.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("IdRole")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("LastLogin")
                         .HasColumnType("datetime(6)");
 
@@ -296,6 +270,11 @@ namespace CDL.Models.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
                     b.Property<string>("Token")
                         .HasColumnType("longtext");
 
@@ -303,8 +282,6 @@ namespace CDL.Models.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("IdUser");
-
-                    b.HasIndex("IdRole");
 
                     b.ToTable("User");
                 });
@@ -342,10 +319,6 @@ namespace CDL.Models.Migrations
 
                     b.Property<int>("IdUser")
                         .HasColumnType("int");
-
-                    b.Property<string>("Numero")
-                        .IsRequired()
-                        .HasColumnType("longtext");
 
                     b.Property<string>("Telefone")
                         .IsRequired()
@@ -429,25 +402,11 @@ namespace CDL.Models.Migrations
                     b.Navigation("CarouselImages");
                 });
 
-            modelBuilder.Entity("CDL.Models.DataBase.Role", b =>
-                {
-                    b.Navigation("Users");
-                });
-
             modelBuilder.Entity("CDL.Models.DataBase.User", b =>
                 {
-                    b.HasOne("CDL.Models.DataBase.Role", "Role")
-                        .WithMany("Users")
-                        .HasForeignKey("IdRole")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("EventRegistrations");
 
                     b.Navigation("Fields")
-                        .IsRequired();
-
-                    b.Navigation("Role")
                         .IsRequired();
                 });
 #pragma warning restore 612, 618

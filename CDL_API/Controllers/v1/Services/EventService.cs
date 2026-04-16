@@ -53,7 +53,7 @@ namespace CDL.Api.Controllers.v1.Services
         {
             using var db = databaseFactory.Create();
 
-            IQueryable<Event> query = db.Event.Where(e => e.Active);
+            IQueryable<Event> query = db.Event.Where(e => e.Active && e.Published);
 
             if (!string.IsNullOrEmpty(search))
                 query = query.Where(e => e.Title.Contains(search));
@@ -81,6 +81,27 @@ namespace CDL.Api.Controllers.v1.Services
             }).ToList();
 
             return new PaggedList<EventResponse>(page, pageSize, pageRange, totalCount, response);
+        }
+
+        public async Task<EventResponse> GetPublicEvent(int idEvent)
+        {
+            using var db = databaseFactory.Create();
+
+            var e = await db.Event.FirstOrDefaultAsync(x => x.IdEvent == idEvent && x.Active && x.Published);
+            if (e == null)
+                throw new Exception("Event not found");
+
+            return new EventResponse
+            {
+                IdEvent = e.IdEvent,
+                Title = e.Title,
+                Description = e.Description,
+                StartDate = e.StartDate,
+                EndDate = e.EndDate,
+                Location = e.Location,
+                ImageUrl = e.ImageUrl,
+                Published = e.Published
+            };
         }
 
         public async Task<EventResponse> GetEvent(int idEvent)

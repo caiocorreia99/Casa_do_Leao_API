@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using CDL.Models.Binder;
 using CDL.Models.Api;
+using CDL.Models.Helpers;
 using static CDL.Models.Helpers.Constants;
 
 var MyAllowSpecificOrigins = "AllowLocalhost";
@@ -24,7 +25,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       builder =>
                       {
-                          builder.WithOrigins("http://localhost:3000")
+                          builder.WithOrigins("http://localhost:3000", "http://localhost:5173")
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                       });
@@ -79,6 +80,9 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IContentService, ContentService>();
+builder.Services.AddScoped<ICmsAdminService, CmsAdminService>();
+builder.Services.AddScoped<IEventRegistrationService, EventRegistrationService>();
 
 builder.Services.AddAuthentication(x =>
 {
@@ -87,7 +91,7 @@ builder.Services.AddAuthentication(x =>
 })
 .AddJwtBearer(x =>
 {
-    x.RequireHttpsMetadata = false;
+    x.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
     x.SaveToken = false;
     x.TokenValidationParameters = new TokenValidationParameters
     {
@@ -105,21 +109,22 @@ builder.Services.AddAuthentication(x =>
         OnChallenge = async (context) =>
         {
             context.HandleResponse();
-            if (context.AuthenticateFailure != null)
-            {
-                context.Response.StatusCode = 406;
-                await context.HttpContext.Response.WriteAsJsonAsync(ApiResponse<Response>.GetErrorResponse(InternalCode.TokenAccess, System.Net.HttpStatusCode.InternalServerError, "Expired Token", new Exception()));
-            }
-
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            var failure = context.AuthenticateFailure ?? new Exception("Unauthorized");
+            await context.HttpContext.Response.WriteAsJsonAsync(
+                ApiResponse<Response>.GetErrorResponse(
+                    InternalCode.TokenAccess,
+                    System.Net.HttpStatusCode.Unauthorized,
+                    failure.Message.Contains("expired", StringComparison.OrdinalIgnoreCase) ? "Token expirado." : "Token inválido ou não autorizado.",
+                    failure));
         }
     };
 });
 
 builder.Services.AddAuthorization(options =>
-{    
-    options.FallbackPolicy = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
+{
+    options.AddPolicy(AuthPolicies.AdminOnly, p => p.RequireRole(UserRoles.Admin));
+    options.AddPolicy(AuthPolicies.EditorOrAdmin, p => p.RequireRole(UserRoles.Editor, UserRoles.Admin));
 });
 
 var app = builder.Build();
@@ -130,6 +135,7 @@ app.UseCors(MyAllowSpecificOrigins);
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

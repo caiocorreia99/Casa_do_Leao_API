@@ -3,6 +3,7 @@ using CDL.Api.Controllers.v1.Models;
 using CDL.Api.Helpers;
 using CDL.Models.Binder;
 using CDL.Models.DataBase;
+using CDL.Models.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -48,7 +49,9 @@ namespace CDL.Api.Controllers.v1.Services
 
             string passEncrypted = APIHelper.EncryptAES(login.Password, env.CypherPass);
 
-            var authUser = await db.User.FirstOrDefaultAsync(u => u.Email == login.UserName && u.Password == passEncrypted)
+            var authUser = await db.User
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(u => u.Email == login.UserName && u.Password == passEncrypted)
                 ?? throw new Exception("Invalid credentials");
 
             if (!authUser.Active)
@@ -58,6 +61,10 @@ namespace CDL.Api.Controllers.v1.Services
 
             await db.SaveChangesAsync();
 
+            var role = authUser.Role?.Code;
+            if (string.IsNullOrWhiteSpace(role) || !UserRoles.IsValid(role))
+                role = authUser.Admin ? UserRoles.Admin : UserRoles.Simple;
+
             return new LoginResponse
             {
                 IdUser = authUser.IdUser,
@@ -65,7 +72,9 @@ namespace CDL.Api.Controllers.v1.Services
                 Email = authUser.Email,
                 Active = authUser.Active,
                 Admin = authUser.Admin,
-                Token = authUser.Token,                
+                IdRole = authUser.IdRole,
+                Role = role,
+                Token = authUser.Token,
             };
         }
 
@@ -74,12 +83,18 @@ namespace CDL.Api.Controllers.v1.Services
 
             using var db = this.database.Create();
 
-            var user = await db.User.FirstOrDefaultAsync(x => x.IdUser == idUser)
+            var user = await db.User
+                .Include(u => u.Role)
+                .FirstOrDefaultAsync(x => x.IdUser == idUser)
                 ?? throw new Exception("User not found");
 
             refreshUserToken(db, user);
 
             await db.SaveChangesAsync();
+
+            var role = user.Role?.Code;
+            if (string.IsNullOrWhiteSpace(role) || !UserRoles.IsValid(role))
+                role = user.Admin ? UserRoles.Admin : UserRoles.Simple;
 
             return new LoginResponse()
             {
@@ -88,6 +103,8 @@ namespace CDL.Api.Controllers.v1.Services
                 Email = user.Email,
                 Active = user.Active,
                 Admin = user.Admin,
+                IdRole = user.IdRole,
+                Role = role,
                 Token = user.Token
             };
 

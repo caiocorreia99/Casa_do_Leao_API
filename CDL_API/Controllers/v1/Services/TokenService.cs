@@ -1,6 +1,7 @@
 ﻿using CDL.Api.Controllers.v1.Interface;
 using CDL.Models.Configuration;
 using CDL.Models.DataBase;
+using CDL.Models.Helpers;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -28,13 +29,17 @@ namespace CDL.Api.Controllers.v1.Services
             if (user == null)
                 throw new ArgumentNullException(nameof(user), "It's not possible to generate a new JwtToken for a null user.");
 
-            // Generate the claims to hold in the JwtObject
+            var role = user.Role?.Code;
+            if (string.IsNullOrWhiteSpace(role) || !UserRoles.IsValid(role))
+                role = user.Admin ? UserRoles.Admin : UserRoles.Simple;
+
             var authClaims = new List<Claim>
             {
                 new Claim("uid", user.IdUser.ToString()),
                 new Claim("name", user.Name),
                 new Claim("login", user.Email),
-                new Claim("date", DateTime.Now.Ticks.ToString())
+                new Claim("date", DateTime.Now.Ticks.ToString()),
+                new Claim(ClaimTypes.Role, role)
             };
 
             // Get the key as a symetric security object

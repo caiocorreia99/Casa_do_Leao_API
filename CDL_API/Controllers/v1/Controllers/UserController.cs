@@ -2,15 +2,17 @@
 using CDL.Api.Helpers;
 using CDL.Models.Api;
 using CDL.Models.Binder;
+using CDL.Models.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
+using ApiRoutes = CDL.Api.Helpers.Constants;
 using static CDL.Models.Helpers.Constants;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace CDL.Api.Controllers.v1.Controllers
 {
     [ApiController]
-    [Route(Constants.UserRoute)]
+    [Route(ApiRoutes.UserRoute)]
     public class UserController : ControllerBase
     {
 
@@ -21,13 +23,26 @@ namespace CDL.Api.Controllers.v1.Controllers
             userService = UserService;
         }
 
+        private int? ParseCallerUserId()
+        {
+            var v = User.FindFirst("uid")?.Value;
+            return int.TryParse(v, out var id) ? id : null;
+        }
+
         [Authorize]
         [HttpGet]
-        [Route(Constants.UserRoute + "/get-user")]
+        [Route(ApiRoutes.UserRoute + "/get-user")]
         public async Task<ApiResponse<List<UserResponse>>> Get([FromQuery] int idUser)
         {
             try
             {
+                var callerId = ParseCallerUserId();
+                if (callerId == null)
+                    return ApiResponse<List<UserResponse>>.GetErrorResponse(InternalCode.Catch_Generic, HttpStatusCode.Unauthorized, "Não autenticado.", new Exception("No uid"));
+
+                if (!User.IsInRole(UserRoles.Admin) && callerId != idUser)
+                    return ApiResponse<List<UserResponse>>.GetErrorResponse(InternalCode.Catch_Generic, HttpStatusCode.Forbidden, "Operação não permitida.", new Exception("Forbidden"));
+
                 var result = await userService.GetUser(idUser);
                 return ApiResponse<List<UserResponse>>.GetSuccessResponse(data: result);
             }
@@ -38,8 +53,9 @@ namespace CDL.Api.Controllers.v1.Controllers
             }
         }
         
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
-        [Route(Constants.UserRoute + "/create-user")]
+        [Route(ApiRoutes.UserRoute + "/create-user")]
         public async Task<ApiResponse<Response>> CreateUser([FromBody] UserRequest userRequest)
         {
             try
@@ -55,7 +71,7 @@ namespace CDL.Api.Controllers.v1.Controllers
 
         [HttpPost]
         [AllowAnonymous]
-        [Route(Constants.UserRoute + "/create-public-user")]
+        [Route(ApiRoutes.UserRoute + "/create-public-user")]
         public async Task<ApiResponse<Response>> CreatePublicUser([FromBody] UserRequest userRequest)
         {
             try
@@ -71,12 +87,14 @@ namespace CDL.Api.Controllers.v1.Controllers
 
         [Authorize]
         [HttpPut]
-        [Route(Constants.UserRoute + "/update-user")]
+        [Route(ApiRoutes.UserRoute + "/update-user")]
         public async Task<ApiResponse<Response>> UpdateUser([FromBody] UserRequest userRequest)
         {
             try
             {
-                await userService.UpdateUser(userRequest);
+                var callerId = ParseCallerUserId() ?? throw new Exception("Não autenticado.");
+                var isAdmin = User.IsInRole(UserRoles.Admin);
+                await userService.UpdateUser(userRequest, callerId, isAdmin);
                 return ApiResponse<Response>.GetSuccessResponse(message: $"Usuario Atualizado com sucesso.");
             }
             catch (Exception ex)
@@ -85,9 +103,9 @@ namespace CDL.Api.Controllers.v1.Controllers
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpGet]
-        [Route(Constants.UserRoute + "/list")]
+        [Route(ApiRoutes.UserRoute + "/list")]
         public async Task<ApiResponse<PaggedList<UserResponse>>> ListUsers([FromQuery] int page = 1, int pageSize = 0, string? search = null)
         {
             try
@@ -98,14 +116,13 @@ namespace CDL.Api.Controllers.v1.Controllers
             catch (Exception ex)
             {
                 var urlRequest = $"{Request.Host}{Request.Path}{Request.QueryString}";
-                //await logService.SaveLog("CommandController", "ListCommand", urlRequest, ex.Message);
                 return ApiResponse<PaggedList<UserResponse>>.GetErrorResponse(InternalCode.Catch_Generic, System.Net.HttpStatusCode.InternalServerError, ex.Message, ex);
             }
         }
 
-        [Authorize]
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpDelete]
-        [Route(Constants.UserRoute + "/disable-user")]
+        [Route(ApiRoutes.UserRoute + "/disable-user")]
         public async Task<ApiResponse<Response>> DisableUser([FromQuery] int idUser)
         {
             try
@@ -116,7 +133,6 @@ namespace CDL.Api.Controllers.v1.Controllers
             catch (Exception ex)
             {
                 var urlRequest = $"{Request.Host}{Request.Path}{Request.QueryString}";
-                //await logService.SaveLog("UserController", "Post", urlRequest, ex.Message);
                 return ApiResponse<Response>.GetErrorResponse(InternalCode.Catch_Generic, System.Net.HttpStatusCode.InternalServerError, ex.Message, exception: ex); ;
             }
         }
